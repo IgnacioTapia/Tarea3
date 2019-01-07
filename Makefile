@@ -1,5 +1,5 @@
-SRC1=echoClientSrc
-SRC2=echoServerSrc
+SRC1=Cliente
+SRC2=Servidor
 
 default: all
 
