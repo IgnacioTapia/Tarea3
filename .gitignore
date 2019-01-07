@@ -35,5 +35,5 @@
 .DS_Store
 ._*
 *.txt
-Cliente
-Servidor
+Client
+Server
