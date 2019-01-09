@@ -1,118 +1,82 @@
-/*
- *   C++ sockets on Unix and Windows
- *   Copyright (C) 2002
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
-
-/*ignacio.tapiaj@alumnos.uv.cl / juanamaria12*/
-#include "YASL.h" // For Socket, ServerSocket, and SocketException
+#include "YASL.h" // Para Socket, ServerSocket, and SocketException
 #include "checkArgs.h"
-#include <iostream> // For cerr and cout
-#include <cstdlib>  // For atoi()
-#include <stdio.h>      /* printf, scanf, puts, NULL */
-#include <time.h>       /* time */
+#include <iostream> // Para cerr and cout
 #include <fstream>
-#include <sstream>
 #include <vector>
 
-const uint32_t RCVBUFSIZE = 32; // Size of receive buffer
+// METODO QUE MANEJA AL CLIENTE CUANDO SE HACE UNA CONEXIÓN
+void HandleTCPClient(TCPSocket *sock, std::vector<std::string> consejos, uint cantLineas){
 
-// TCP client handling function
-void HandleTCPClient(TCPSocket *sock, std::vector<std::string> consejos, uint cantLineas)
-{
-	uint consejoRandom = rand() % cantLineas;
+	uint consejoRandom = rand() % cantLineas;	//SE GENERA UN NÚMERO RANDOM PARA LA SELECCIÓN AL AZAR DEL CONSEJO, DESDE 0 HASTA CANTLINEAS - 1
+	//MUESTRA LA INFO DEL CLEINTE
 	std::cout << "Recibiendo a cliente ";
-	try
-	{
+	try{
 		std::cout << sock->getForeignAddress() << ":";
 	}
-	catch (SocketException e)
-	{
+	catch (SocketException e){
 		std::cerr << "Error al recuperar IP del cliente" << std::endl;
 	}
-	try
-	{
+	try{
 		std::cout << sock->getForeignPort();
 	}
-	catch (SocketException e)
-	{
+	catch (SocketException e){
 		std::cerr << "Error al recuperar el puerto del cliente" << std::endl;
 	}
+	
 	std::cout << std::endl;
-
+	//CONCATENACIÓN DEL MENSAJE DONDE SE MUESTRA EL NÚMERO DE CONSEJO (NUMERO SELECCIONADO + 1) Y EL MENSAJE QUE SE ENCUENTRA EN EL INDICE DEL ARREGLO DE CONSEJOS
 	std::string mensaje = "Consejo[" + std::to_string(consejoRandom + 1) + "]: " + consejos[consejoRandom];
-	sock->send(mensaje.c_str(), mensaje.length());
-
+	sock->send(mensaje.c_str(), mensaje.length());	//SE ENVÍA EL MENSAJE AL CLIENTE EN CONJUNTO A LA CANTIDAD DE BYTES DEL MENSAJE
+	// SE CIERRA EL SOCKET
 	delete sock;
 }
 
-int main(int argc, char *argv[])
-{
+//METODO MAIN
+int main(int argc, char *argv[]){
 
 	checkArgs *argumentos = new checkArgs(argc, argv);
 
 	uint16_t echoServPort;
 	std::string echoServAddress;
 	std::string nomArchivo;
+
+	std::ifstream archivo;
+	std::string linea;
+
+	uint cantLineas = 0;
+	std::vector<std::string> consejos;
+	
+	//SE GUARDAN EN LAS SIGUENTES VARIABLES LOS DATOS CORRESPONDIENTES DE CADA UNO QUE FUERON INGRESADOS POR CONSOLA
 	echoServPort = argumentos->getArgs().PORT;
 	echoServAddress = argumentos->getArgs().SERVER;
 	nomArchivo = argumentos->getArgs().ARCHIVO;
 
+	archivo.open(nomArchivo);	//SE ABRE EL ARCHIVO
 
-	std::ifstream archivo;
-	archivo.open(nomArchivo);
-
-	std::string linea;
-	uint cantLineas = 0;
-	std::vector<std::string> consejos;
-	if (archivo.is_open())
-	{
-		while (getline(archivo, linea))
-		{
-			consejos.push_back(linea);
-			cantLineas = cantLineas + 1;
+	if (archivo.is_open()){
+		while (getline(archivo, linea)){		//MIENTRAS SE SIGAN LEYENDO LINEAS...
+			consejos.push_back(linea);			//GUARDA LA LINEA EN EL ARREGLO
+			cantLineas = cantLineas + 1;		//SE AUMENTA EN 1 LA CANTIDAD DE LINEAS LEÍDAS
 		}
-		archivo.close();
+		archivo.close();						//SE CIERRA EL ARCHIVO
 	}
-	else
-	{
+	else{
 		std::cout << "No se pudo abrir Archivo\n";
 	}
 
-	/*for(uint i = 0; i < cantLineas; i++)
-    {
-        std::cout << consejos[i] << std::endl;
-    }*/
-	/*consejoRandom = rand() % cantLineas;
-	std::cout << consejos[consejoRandom] << std::endl;*/
-	try
-	{
-		TCPServerSocket servSock(echoServAddress, echoServPort); // Server Socket object
+	try{
+		TCPServerSocket servSock(echoServAddress, echoServPort); // SE INSTANCIA EL SOCKET CON LA IP 
+		//SE MUESTRA INFO DE SERVER POR PANTALLA
+		std::cout << "Servidor en espera de cliente en servidor: " << echoServAddress << " y en el puerto: " << echoServPort << std::endl;
 
-		for (;;)
-		{										// Run forever
-			HandleTCPClient(servSock.accept(), consejos, cantLineas); // Wait for a client to connect
+		for (;;){													//SE EJECUTA POR SIEMPRE
+			//EL METODO RECIBE COMO PARAMETRO LA CONEXIÓN ESTABLECIDA, EL ARREGLO DE CONSEJOS Y LA CANTIDAD DE LINEAS LEÍDAS
+			HandleTCPClient(servSock.accept(), consejos, cantLineas); //ESPERA UNA CONEXIÓN DE ALGÚN CLIENTE
 		}
 	}
-	catch (SocketException &e)
-	{
+	catch (SocketException &e){
 		std::cerr << e.what() << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	// NOT REACHED
-
 	return EXIT_SUCCESS;
 }
