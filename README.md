@@ -1,4 +1,4 @@
-# Proyecto Servidor WEB / Integrantes:
+# Proyecto Comunicación CLIENTE-SERVIDOR  / Integrantes:
 
 -   Alvaro Pismante - alvaro.pismante@alumnos.uv.cl
 -   Edson Herrera- edson.herrera@alumnos.uv.cl
