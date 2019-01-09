@@ -46,3 +46,6 @@ Use los parametros mostrados:
 ./Client -s 127.0.0.1 -p 1234
 Consejo[2]: No tengo que dejar las cosas para última hora.
 ```
+
+Para agregar un nuevo txt de consejos entre a la carpeta Servidor/Consejos
+y coloque el archivo con el mismo formato que el original para tener un bueno funcionamiento.
